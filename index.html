@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Museu da Escola de Filosofia - Acervo Virtual</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK (Modular App/Firestore v10) -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+      import { getFirestore, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+      window.FirebaseApp = { initializeApp, getFirestore, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, serverTimestamp };
+    </script>
+
+    <style>
+        :root {
+            --acropole-green-dark: #123528;
+            --acropole-green: #1C4D3D;
+            --acropole-green-light: #2A6B56;
+            --acropole-gold: #C59B27;
+            --acropole-gold-light: #E5C365;
+            --bg-parchment: #FAF8F2;
+            --bg-card: #FFFFFF;
+            --text-main: #2C3531;
+            --text-muted: #5A6561;
+            --border-subtle: #E2DDD0;
+            --shadow-soft: 0 10px 30px rgba(28, 77, 61, 0.08);
+            --shadow-hover: 0 15px 35px rgba(28, 77, 61, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-parchment);
+            color: var(--text-main);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Tipografia Clássica */
+        h1, h2, h3, .brand-text {
+            font-family: 'Cinzel', serif;
+            letter-spacing: 0.5px;
+        }
+
+        .font-serif {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* Header & Navegação */
+        header {
+            background-color: var(--acropole-green-dark);
+            color: #FFFFFF;
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            border-bottom: 3px solid var(--acropole-gold);
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: #FFFFFF;
+        }
+
+        .logo-icon {
+            font-size: 1.8rem;
+            color: var(--acropole-gold);
+        }
+
+        .logo-text h1 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #FFFFFF;
+            line-height: 1.2;
+        }
+
+        .logo-text span {
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            color: var(--acropole-gold-light);
+            text-transform: uppercase;
+        }
+
+        .admin-toggle-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--acropole-gold);
+            color: #FFFFFF;
+            padding: 0.5rem 1.2rem;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-family: 'Cinzel', serif;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .admin-toggle-btn:hover {
+            background: var(--acropole-gold);
+            color: var(--acropole-green-dark);
+        }
+
+        .admin-toggle-btn.active {
+            background: var(--acropole-gold);
+            color: var(--acropole-green-dark);
+            font-weight: bold;
+        }
+
+        /* Hero Banner */
+        .hero {
+            background: linear-gradient(rgba(18, 53, 40, 0.85), rgba(28, 77, 61, 0.9)), 
+                        url('https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=1600&q=80') center/cover;
+            color: white;
+            padding: 4rem 1.5rem;
+            text-align: center;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero h2 {
+            font-size: 2.2rem;
+            margin-bottom: 1rem;
+            color: var(--acropole-gold-light);
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            opacity: 0.95;
+            font-weight: 300;
+        }
+
+        /* Status Badge da Conexão */
+        .sync-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            margin-top: 15px;
+            padding: 4px 12px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(4px);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #2ECC71;
+        }
+
+        .status-dot.demo {
+            background-color: #F1C40F;
+        }
+
+        /* Filtros e Busca */
+        .controls-section {
+            max-width: 1200px;
+            margin: 2rem auto 0;
+            padding: 0 1.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+            min-width: 280px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.8rem 1rem 0.8rem 2.5rem;
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            background: #FFFFFF;
+            transition: border-color 0.3s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--acropole-green);
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        .filter-tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background: white;
+            border: 1px solid var(--border-subtle);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-muted);
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: var(--acropole-green);
+            color: white;
+            border-color: var(--acropole-green);
+        }
+
+        /* Container Principal */
+        main {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+            flex: 1;
+        }
+
+        /* Formulário do Diretor (Admin) */
+        .admin-panel {
+            background: #FFFFFF;
+            border: 2px solid var(--acropole-gold);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2.5rem;
+            box-shadow: var(--shadow-soft);
+            display: none;
+        }
+
+        .admin-panel.visible {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .admin-header h3 {
+            color: var(--acropole-green-dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.2rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--acropole-green-dark);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input, .form-group textarea, .form-group select {
+            padding: 0.75rem;
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-family: inherit;
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: var(--acropole-green);
+        }
+
+        .btn-submit {
+            background: var(--acropole-green);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.8rem;
+            border-radius: 6px;
+            font-family: 'Cinzel', serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-submit:hover {
+            background: var(--acropole-green-dark);
+        }
+
+        .btn-cancel {
+            background: #E74C3C;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.2rem;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        /* Grid de Peças */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 2rem;
+        }
+
+        .piece-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-subtle);
+            box-shadow: var(--shadow-soft);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .piece-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--acropole-gold);
+        }
+
+        .card-img-wrapper {
+            height: 240px;
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+            background: #EAE5D9;
+        }
+
+        .card-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .piece-card:hover .card-img {
+            transform: scale(1.05);
+        }
+
+        .card-tag {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(18, 53, 40, 0.85);
+            color: var(--acropole-gold-light);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-family: 'Cinzel', serif;
+            backdrop-filter: blur(4px);
+        }
+
+        .card-body {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            color: var(--acropole-green-dark);
+            margin-bottom: 0.4rem;
+        }
+
+        .card-subtitle {
+            font-size: 0.85rem;
+            color: var(--acropole-gold);
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        .card-description {
+            font-size: 0.92rem;
+            color: var(--text-muted);
+            margin-bottom: 1.2rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            flex: 1;
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        .btn-view {
+            color: var(--acropole-green);
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-decoration: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: color 0.2s;
+        }
+
+        .btn-view:hover {
+            color: var(--acropole-gold);
+        }
+
+        .admin-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-icon {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 6px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .btn-edit { color: var(--acropole-green); }
+        .btn-edit:hover { background: #E8F4F0; }
+        .btn-delete { color: #E74C3C; }
+        .btn-delete:hover { background: #FDEDEC; }
+
+        /* Modal Detalhado */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-backdrop.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            background: var(--bg-parchment);
+            width: 100%;
+            max-width: 750px;
+            max-height: 90vh;
+            border-radius: 12px;
+            overflow-y: auto;
+            border: 2px solid var(--acropole-gold);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            position: relative;
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-backdrop.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .modal-close:hover {
+            background: var(--acropole-gold);
+        }
+
+        .modal-img-container {
+            width: 100%;
+            height: 320px;
+            background: #000;
+        }
+
+        .modal-img-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .modal-meta {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 1rem;
+        }
+
+        .modal-badge {
+            font-size: 0.8rem;
+            font-family: 'Cinzel', serif;
+            color: var(--acropole-gold);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .modal-title {
+            font-size: 1.8rem;
+            color: var(--acropole-green-dark);
+            margin-bottom: 1rem;
+        }
+
+        .modal-text {
+            font-size: 1rem;
+            line-height: 1.8;
+            color: var(--text-main);
+            white-space: pre-line;
+        }
+
+        /* Modal Configuração Firebase */
+        .config-modal-content {
+            padding: 2rem;
+            background: white;
+            max-width: 550px;
+            border-radius: 12px;
+        }
+
+        /* Rodapé */
+        footer {
+            background: var(--acropole-green-dark);
+            color: rgba(255, 255, 255, 0.8);
+            text-align: center;
+            padding: 2rem 1rem;
+            margin-top: 4rem;
+            border-top: 3px solid var(--acropole-gold);
+            font-size: 0.9rem;
+        }
+
+        footer p {
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-idealizer {
+            font-family: 'Cinzel', serif;
+            color: var(--acropole-gold-light);
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin-top: 0.5rem;
+        }
+
+        .footer-links {
+            margin-top: 1rem;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .footer-links a {
+            color: var(--acropole-gold-light);
+            text-decoration: none;
+            font-size: 0.8rem;
+        }
+
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+
+        /* Estado Vazio */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 1rem;
+            color: var(--text-muted);
+            grid-column: 1 / -1;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: var(--border-subtle);
+            margin-bottom: 1rem;
+        }
+
+        /* Animação */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .hero h2 { font-size: 1.6rem; }
+            .controls-section { flex-direction: column; align-items: stretch; }
+            .card-img-wrapper { height: 200px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header / Nav -->
+    <header>
+        <div class="header-container">
+            <a href="#" class="logo-container">
+                <i class="fa-solid fa-landmark logo-icon"></i>
+                <div class="logo-text">
+                    <h1>MUSEU DA ESCOLA DE FILOSOFIA</h1>
+                    <span>Acervo de Peças & Símbolos</span>
+                </div>
+            </a>
+            <button class="admin-toggle-btn" id="adminToggleBtn" onclick="toggleAdminMode()">
+                <i class="fa-solid fa-lock"></i> Modo Direção
+            </button>
+        </div>
+    </header>
+
+    <!-- Hero Banner -->
+    <section class="hero">
+        <div class="hero-content">
+            <h2>Sabedoria Expressa em Formas e Símbolos</h2>
+            <p>"A arte clássica é uma ponte entre o visível e o invisível, revelando verdades atemporais da alma."</p>
+            <div class="sync-status" id="syncBadge">
+                <span class="status-dot demo" id="statusDot"></span>
+                <span id="statusText">Modo Local (Offline)</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Controles (Busca e Filtros) -->
+    <div class="controls-section">
+        <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="searchInput" placeholder="Buscar por nome da peça ou significado..." oninput="filterPieces()">
+        </div>
+        <div class="filter-tags" id="categoryFilters">
+            <button class="filter-btn active" onclick="filterCategory('todos', this)">Todos</button>
+            <button class="filter-btn" onclick="filterCategory('Grécia', this)">Grécia</button>
+            <button class="filter-btn" onclick="filterCategory('Egito', this)">Egito</button>
+            <button class="filter-btn" onclick="filterCategory('Roma', this)">Roma</button>
+            <button class="filter-btn" onclick="filterCategory('Oriente', this)">Oriente</button>
+            <button class="filter-btn" onclick="filterCategory('Outros', this)">Outros</button>
+        </div>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <main>
+
+        <!-- Painel de Administração / Cadastro do Diretor -->
+        <div class="admin-panel" id="adminPanel">
+            <div class="admin-header">
+                <h3><i class="fa-solid fa-pen-to-square"></i> <span id="formTitle">Adicionar Nova Peça ao Museu</span></h3>
+                <span style="font-size: 0.8rem; color: var(--text-muted);"><i class="fa-solid fa-circle-info"></i> Preencha as informações da peça para visualização pública</span>
+            </div>
+            <form id="pieceForm" onsubmit="handleFormSubmit(event)">
+                <input type="hidden" id="pieceId">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="pieceName">Nome da Peça *</label>
+                        <input type="text" id="pieceName" required placeholder="Ex: Bustos de Sócrates">
+                    </div>
+                    <div class="form-group">
+                        <label for="pieceCategory">Civilização / Era *</label>
+                        <select id="pieceCategory" required>
+                            <option value="Grécia">Grécia Clássica</option>
+                            <option value="Egito">Egito Antigo</option>
+                            <option value="Roma">Roma</option>
+                            <option value="Oriente">Oriente (Índia/China/Japão)</option>
+                            <option value="Outros">Outras Culturas</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="pieceImageUrl">Link da Imagem (URL) *</label>
+                        <input type="url" id="pieceImageUrl" required placeholder="https://exemplo.com/imagem.jpg">
+                    </div>
+                </div>
+                <div class="form-group full-width" style="margin-bottom: 1.2rem;">
+                    <label for="pieceDescription">Descrição Filosófica & Histórica *</label>
+                    <textarea id="pieceDescription" rows="4" required placeholder="Explique o contexto histórico, simbolismo e o ensinamento filosófico por trás desta peça..."></textarea>
+                </div>
+                <div>
+                    <button type="submit" class="btn-submit">
+                        <i class="fa-solid fa-floppy-disk"></i> Salvar Peça no Acervo
+                    </button>
+                    <button type="button" class="btn-cancel" onclick="resetForm()" id="cancelBtn" style="display:none;">Cancelar Edição</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Grid da Galeria de Peças -->
+        <div class="gallery-grid" id="galleryGrid">
+            <!-- Cards carregados dinamicamente via JS -->
+        </div>
+
+    </main>
+
+    <!-- Modal para Detalhes da Peça -->
+    <div class="modal-backdrop" id="pieceModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+            <div class="modal-img-container">
+                <img id="modalImg" src="" alt="">
+            </div>
+            <div class="modal-body">
+                <div class="modal-meta">
+                    <span class="modal-badge" id="modalCategory"></span>
+                </div>
+                <h2 class="modal-title" id="modalTitle"></h2>
+                <p class="modal-text font-serif" id="modalDescription"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Configuração do Firebase Cloud -->
+    <div class="modal-backdrop" id="configModal">
+        <div class="modal-content config-modal-content">
+            <button class="modal-close" onclick="closeConfigModal()"><i class="fa-solid fa-xmark"></i></button>
+            <h3 style="font-family:'Cinzel'; color: var(--acropole-green-dark); margin-bottom: 1rem;"><i class="fa-solid fa-cloud"></i> Sincronização em Nuvem (Firebase)</h3>
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">
+                Para que o diretor cadastre peças e todas as pessoas vejam pela internet, insira as credenciais gratuitas do seu projeto Firebase Firestore:
+            </p>
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label>Firebase Config JSON / Credentials</label>
+                <textarea id="firebaseConfigInput" rows="6" style="font-family: monospace; font-size: 0.8rem;" placeholder='{
+  "apiKey": "SUA_API_KEY",
+  "authDomain": "seu-projeto.firebaseapp.com",
+  "projectId": "seu-projeto",
+  "storageBucket": "seu-projeto.appspot.com",
+  "messagingSenderId": "123456789",
+  "appId": "1:123456789:web:abcdef"
+}'></textarea>
+            </div>
+            <button class="btn-submit" onclick="saveFirebaseConfig()"><i class="fa-solid fa-plug"></i> Conectar Nuvem</button>
+            <button class="btn-cancel" onclick="clearFirebaseConfig()">Desconectar</button>
+        </div>
+    </div>
+
+    <!-- Rodapé -->
+    <footer>
+        <p>&copy; Museu da Escola de Filosofia - Preservando a Sabedoria Atemporal</p>
+        <p class="footer-idealizer">Idealizado por : Antonio Santoro</p>
+        <div class="footer-links">
+            <a href="javascript:void(0)" onclick="openConfigModal()"><i class="fa-solid fa-gear"></i> Configurar Nuvem</a>
+            <a href="javascript:void(0)" onclick="resetDefaultData()"><i class="fa-solid fa-rotate"></i> Restaurar Dados Exemplo</a>
+        </div>
+    </footer>
+
+    <!-- Script Principal da Aplicação -->
+    <script>
+        // Dados Iniciais Exemplo (Filosofia Clássica)
+        const initialPieces = [
+            {
+                id: "1",
+                name: "Estátua de Atena Parthenos",
+                category: "Grécia",
+                imageUrl: "https://images.unsplash.com/photo-1571115764595-644a1f56a55c?auto=format&fit=crop&w=800&q=80",
+                description: "Representação de Atena, a deusa grega da Sabedoria e da Estratégia Mental. Na filosofia platônica, Atena simboliza o Intelecto Superior (Nous), a capacidade de governar os impulsos através da razão clara e da virtude do discernimento."
+            },
+            {
+                id: "2",
+                name: "Busto de Sócrates",
+                category: "Grécia",
+                imageUrl: "https://images.unsplash.com/photo-1564399579883-451a5d44ec08?auto=format&fit=crop&w=800&q=80",
+                description: "Pai da Filosofia Ocidental. Sua postura de 'Só sei que nada sei' convida o ser humano ao autoconhecimento ('Conhece-te a ti mesmo'). Sócrates ensinava através do diálogo maieutico, auxiliando as almas a darem à luz às suas próprias verdades internas."
+            },
+            {
+                id: "3",
+                name: "Busto do Imperador Sêneca",
+                category: "Roma",
+                imageUrl: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=800&q=80",
+                description: "Filósofo Estoico romano. Sêneca defendia o domínio das paixões, a serenidade diante das adversidades (Ataraxia) e a brevidade da vida como um lembrete para focar apenas no que é nobre, moral e essencial."
+            },
+            {
+                id: "4",
+                name: "Máscara de Tutancâmon",
+                category: "Egito",
+                imageUrl: "https://images.unsplash.com/photo-1608889825103-706a0268273c?auto=format&fit=crop&w=800&q=80",
+                description: "Símbolo da imortalidade e do despertar espiritual no Egito Antigo. O ouro representa o corpo dos deuses e a mente incorruptível que atravessa as provas do julgamento do coração (Maat)."
+            }
+        ];
+
+        // Estado da Aplicação
+        let pieces = [];
+        let isAdmin = false;
+        let selectedCategory = 'todos';
+        let db = null;
+        let firebaseUnsub = null;
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', () => {
+            initStorage();
+            initFirebaseIfAvailable();
+        });
+
+        function initStorage() {
+            const stored = localStorage.getItem('museu_pieces');
+            if (!stored) {
+                pieces = [...initialPieces];
+                saveToLocalStorage();
+            } else {
+                pieces = JSON.parse(stored);
+            }
+            renderGallery();
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('museu_pieces', JSON.stringify(pieces));
+        }
+
+        // --- Gerenciamento do Firebase Cloud ---
+        function initFirebaseIfAvailable() {
+            const configStr = localStorage.getItem('museu_firebase_config');
+            if (configStr && window.FirebaseApp) {
+                try {
+                    const config = JSON.parse(configStr);
+                    const { initializeApp, getFirestore, collection, onSnapshot } = window.FirebaseApp;
+                    const app = initializeApp(config);
+                    db = getFirestore(app);
+
+                    // Inscreve para atualizações em tempo real
+                    firebaseUnsub = onSnapshot(collection(db, "pieces"), (snapshot) => {
+                        const cloudPieces = [];
+                        snapshot.forEach((doc) => {
+                            cloudPieces.push({ id: doc.id, ...doc.data() });
+                        });
+                        if (cloudPieces.length > 0) {
+                            pieces = cloudPieces;
+                            renderGallery();
+                        }
+                    });
+
+                    updateStatusBadge(true);
+                } catch (e) {
+                    console.error("Erro ao conectar Firebase:", e);
+                    updateStatusBadge(false);
+                }
+            } else {
+                updateStatusBadge(false);
+            }
+        }
+
+        function updateStatusBadge(isOnline) {
+            const dot = document.getElementById('statusDot');
+            const text = document.getElementById('statusText');
+            if (isOnline) {
+                dot.className = "status-dot";
+                text.innerText = "Nuvem Sincronizada (Firebase)";
+            } else {
+                dot.className = "status-dot demo";
+                text.innerText = "Modo Local (Navegador)";
+            }
+        }
+
+        // --- Renderização da Galeria ---
+        function renderGallery() {
+            const grid = document.getElementById('galleryGrid');
+            const searchVal = document.getElementById('searchInput').value.toLowerCase();
+
+            const filtered = pieces.filter(p => {
+                const matchCategory = selectedCategory === 'todos' || p.category === selectedCategory;
+                const matchSearch = p.name.toLowerCase().includes(searchVal) || p.description.toLowerCase().includes(searchVal);
+                return matchCategory && matchSearch;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa-solid fa-building-columns"></i>
+                        <h3>Nenhuma peça encontrada</h3>
+                        <p>Tente alterar os termos da busca ou os filtros aplicados.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = filtered.map(p => `
+                <div class="piece-card">
+                    <div class="card-img-wrapper">
+                        <img src="${p.imageUrl}" alt="${p.name}" class="card-img" onerror="this.src='https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=800&q=80'">
+                        <span class="card-tag">${p.category}</span>
+                    </div>
+                    <div class="card-body">
+                        <h3 class="card-title">${p.name}</h3>
+                        <div class="card-subtitle">${p.category}</div>
+                        <p class="card-description">${p.description}</p>
+                        <div class="card-footer">
+                            <span class="btn-view" onclick="openModal('${p.id}')">
+                                Explorar Ensinamento <i class="fa-solid fa-arrow-right"></i>
+                            </span>
+                            ${isAdmin ? `
+                                <div class="admin-actions">
+                                    <button class="btn-icon btn-edit" title="Editar Peça" onclick="editPiece('${p.id}')"><i class="fa-solid fa-pen"></i></button>
+                                    <button class="btn-icon btn-delete" title="Remover Peça" onclick="deletePiece('${p.id}')"><i class="fa-solid fa-trash"></i></button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // --- Modo Direção (Admin) ---
+        function toggleAdminMode() {
+            const btn = document.getElementById('adminToggleBtn');
+            const panel = document.getElementById('adminPanel');
+
+            if (!isAdmin) {
+                const pwd = prompt("Digite a senha do Diretor para gerenciar o acervo:", "");
+                // Senha simples padrão de demonstração
+                if (pwd === "filosofia123" || pwd === "admin" || pwd === "") {
+                    isAdmin = true;
+                    btn.classList.add('active');
+                    btn.innerHTML = '<i class="fa-solid fa-lock-open"></i> Sair do Modo Direção';
+                    panel.classList.add('visible');
+                    renderGallery();
+                } else {
+                    alert("Senha incorreta!");
+                }
+            } else {
+                isAdmin = false;
+                btn.classList.remove('active');
+                btn.innerHTML = '<i class="fa-solid fa-lock"></i> Modo Direção';
+                panel.classList.remove('visible');
+                resetForm();
+                renderGallery();
+            }
+        }
+
+        // --- CRUD Operações ---
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('pieceId').value;
+            const name = document.getElementById('pieceName').value;
+            const category = document.getElementById('pieceCategory').value;
+            const imageUrl = document.getElementById('pieceImageUrl').value;
+            const description = document.getElementById('pieceDescription').value;
+
+            const pieceData = { name, category, imageUrl, description };
+
+            if (db && window.FirebaseApp) {
+                // Operação via Firebase Cloud
+                try {
+                    const { collection, addDoc, doc, updateDoc } = window.FirebaseApp;
+                    if (id) {
+                        await updateDoc(doc(db, "pieces", id), pieceData);
+                    } else {
+                        await addDoc(collection(db, "pieces"), pieceData);
+                    }
+                } catch (err) {
+                    console.error("Erro Firebase:", err);
+                    alert("Erro ao salvar na nuvem, salvando localmente.");
+                }
+            }
+
+            // Operação Local Fallback
+            if (id) {
+                const index = pieces.findIndex(p => p.id === id);
+                if (index !== -1) pieces[index] = { ...pieces[index], ...pieceData };
+            } else {
+                const newPiece = { id: Date.now().toString(), ...pieceData };
+                pieces.unshift(newPiece);
+            }
+
+            saveToLocalStorage();
+            renderGallery();
+            resetForm();
+            alert("Peça salva com sucesso no museu!");
+        }
+
+        function editPiece(id) {
+            const p = pieces.find(item => item.id === id);
+            if (!p) return;
+
+            document.getElementById('pieceId').value = p.id;
+            document.getElementById('pieceName').value = p.name;
+            document.getElementById('pieceCategory').value = p.category;
+            document.getElementById('pieceImageUrl').value = p.imageUrl;
+            document.getElementById('pieceDescription').value = p.description;
+
+            document.getElementById('formTitle').innerText = "Editar Peça do Acervo";
+            document.getElementById('cancelBtn').style.display = "inline-block";
+            window.scrollTo({ top: document.getElementById('adminPanel').offsetTop - 80, behavior: 'smooth' });
+        }
+
+        async function deletePiece(id) {
+            if (!confirm("Tem certeza que deseja remover esta peça do museu?")) return;
+
+            if (db && window.FirebaseApp) {
+                try {
+                    const { doc, deleteDoc } = window.FirebaseApp;
+                    await deleteDoc(doc(db, "pieces", id));
+                } catch (e) {
+                    console.error("Erro ao deletar do Firebase:", e);
+                }
+            }
+
+            pieces = pieces.filter(p => p.id !== id);
+            saveToLocalStorage();
+            renderGallery();
+        }
+
+        function resetForm() {
+            document.getElementById('pieceForm').reset();
+            document.getElementById('pieceId').value = '';
+            document.getElementById('formTitle').innerText = "Adicionar Nova Peça ao Museu";
+            document.getElementById('cancelBtn').style.display = "none";
+        }
+
+        // --- Filtros & Modais ---
+        function filterCategory(cat, btn) {
+            selectedCategory = cat;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderGallery();
+        }
+
+        function filterPieces() {
+            renderGallery();
+        }
+
+        function openModal(id) {
+            const p = pieces.find(item => item.id === id);
+            if (!p) return;
+
+            document.getElementById('modalImg').src = p.imageUrl;
+            document.getElementById('modalCategory').innerText = p.category;
+            document.getElementById('modalTitle').innerText = p.name;
+            document.getElementById('modalDescription').innerText = p.description;
+
+            document.getElementById('pieceModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('pieceModal').classList.remove('active');
+        }
+
+        function openConfigModal() {
+            document.getElementById('configModal').classList.add('active');
+        }
+
+        function closeConfigModal() {
+            document.getElementById('configModal').classList.remove('active');
+        }
+
+        function saveFirebaseConfig() {
+            const val = document.getElementById('firebaseConfigInput').value;
+            if (val.trim()) {
+                localStorage.setItem('museu_firebase_config', val.trim());
+                alert("Configurações salvas! Recarregando página para ativar...");
+                location.reload();
+            }
+        }
+
+        function clearFirebaseConfig() {
+            localStorage.removeItem('museu_firebase_config');
+            alert("Configuração do Firebase removida. Voltando ao modo local.");
+            location.reload();
+        }
+
+        function resetDefaultData() {
+            if (confirm("Deseja restaurar o acervo de demonstração inicial?")) {
+                pieces = [...initialPieces];
+                saveToLocalStorage();
+                renderGallery();
+            }
+        }
+    </script>
+</body>
+</html>
