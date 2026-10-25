@@ -16,9 +16,9 @@
     <!-- Firebase SDK (Modular App/Firestore v10) -->
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-      import { getFirestore, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+      import { getFirestore, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-      window.FirebaseApp = { initializeApp, getFirestore, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, serverTimestamp };
+      window.FirebaseApp = { initializeApp, getFirestore, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, setDoc };
     </script>
 
     <style>
@@ -53,7 +53,6 @@
             flex-direction: column;
         }
 
-        /* Tipografia Clássica */
         h1, h2, h3, .brand-text {
             font-family: 'Cinzel', serif;
             letter-spacing: 0.5px;
@@ -63,7 +62,7 @@
             font-family: 'Playfair Display', serif;
         }
 
-        /* Header & Navegação */
+        /* Header */
         header {
             background-color: var(--acropole-green-dark);
             color: #FFFFFF;
@@ -141,7 +140,7 @@
             background: linear-gradient(rgba(18, 53, 40, 0.85), rgba(28, 77, 61, 0.9)), 
                         url('https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=1600&q=80') center/cover;
             color: white;
-            padding: 4rem 1.5rem;
+            padding: 3.5rem 1.5rem;
             text-align: center;
             border-bottom: 1px solid var(--border-subtle);
         }
@@ -153,7 +152,7 @@
 
         .hero h2 {
             font-size: 2.2rem;
-            margin-bottom: 1rem;
+            margin-bottom: 0.8rem;
             color: var(--acropole-gold-light);
         }
 
@@ -162,16 +161,14 @@
             font-family: 'Playfair Display', serif;
             font-style: italic;
             opacity: 0.95;
-            font-weight: 300;
         }
 
-        /* Status Badge da Conexão */
         .sync-status {
             display: inline-flex;
             align-items: center;
             gap: 6px;
             font-size: 0.75rem;
-            margin-top: 15px;
+            margin-top: 12px;
             padding: 4px 12px;
             border-radius: 12px;
             background: rgba(255, 255, 255, 0.15);
@@ -189,7 +186,7 @@
             background-color: #F1C40F;
         }
 
-        /* Filtros e Busca */
+        /* Controles de Busca e Filtros */
         .controls-section {
             max-width: 1200px;
             margin: 2rem auto 0;
@@ -214,7 +211,6 @@
             border-radius: 8px;
             font-size: 0.95rem;
             background: #FFFFFF;
-            transition: border-color 0.3s;
         }
 
         .search-box input:focus {
@@ -234,6 +230,7 @@
             display: flex;
             gap: 0.5rem;
             flex-wrap: wrap;
+            align-items: center;
         }
 
         .filter-btn {
@@ -245,6 +242,9 @@
             cursor: pointer;
             transition: all 0.2s ease;
             color: var(--text-muted);
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
         }
 
         .filter-btn:hover, .filter-btn.active {
@@ -253,7 +253,7 @@
             border-color: var(--acropole-green);
         }
 
-        /* Container Principal */
+        /* Main Container */
         main {
             max-width: 1200px;
             margin: 2rem auto;
@@ -261,28 +261,33 @@
             flex: 1;
         }
 
-        /* Formulário do Diretor (Admin) */
-        .admin-panel {
+        /* Painéis do Diretor */
+        .admin-sections {
+            display: none;
+            flex-direction: column;
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .admin-sections.visible {
+            display: flex;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .admin-card {
             background: #FFFFFF;
             border: 2px solid var(--acropole-gold);
             border-radius: 12px;
-            padding: 2rem;
-            margin-bottom: 2.5rem;
+            padding: 1.8rem;
             box-shadow: var(--shadow-soft);
-            display: none;
-        }
-
-        .admin-panel.visible {
-            display: block;
-            animation: fadeIn 0.4s ease;
         }
 
         .admin-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1.5rem;
-            padding-bottom: 0.8rem;
+            margin-bottom: 1.2rem;
+            padding-bottom: 0.6rem;
             border-bottom: 1px solid var(--border-subtle);
         }
 
@@ -291,6 +296,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            font-size: 1.15rem;
         }
 
         .form-grid {
@@ -331,6 +337,26 @@
             border-color: var(--acropole-green);
         }
 
+        .image-preview-box {
+            width: 100%;
+            height: 120px;
+            border: 2px dashed var(--border-subtle);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: #FAF8F2;
+            margin-top: 5px;
+            position: relative;
+        }
+
+        .image-preview-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
         .btn-submit {
             background: var(--acropole-green);
             color: white;
@@ -360,7 +386,36 @@
             margin-left: 10px;
         }
 
-        /* Grid de Peças */
+        /* Gestão de Eras/Civilizações */
+        .eras-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 1rem;
+        }
+
+        .era-chip {
+            background: var(--bg-parchment);
+            border: 1px solid var(--acropole-gold);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--acropole-green-dark);
+            font-weight: 500;
+        }
+
+        .era-chip button {
+            background: none;
+            border: none;
+            color: #E74C3C;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        /* Gallery Grid */
         .gallery-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -408,9 +463,9 @@
             position: absolute;
             top: 12px;
             right: 12px;
-            background: rgba(18, 53, 40, 0.85);
+            background: rgba(18, 53, 40, 0.88);
             color: var(--acropole-gold-light);
-            padding: 4px 10px;
+            padding: 4px 12px;
             border-radius: 20px;
             font-size: 0.75rem;
             font-family: 'Cinzel', serif;
@@ -462,12 +517,10 @@
             color: var(--acropole-green);
             font-weight: 600;
             font-size: 0.85rem;
-            text-decoration: none;
             cursor: pointer;
             display: flex;
             align-items: center;
             gap: 5px;
-            transition: color 0.2s;
         }
 
         .btn-view:hover {
@@ -486,7 +539,6 @@
             font-size: 0.9rem;
             padding: 6px;
             border-radius: 4px;
-            transition: background 0.2s;
         }
 
         .btn-edit { color: var(--acropole-green); }
@@ -494,13 +546,10 @@
         .btn-delete { color: #E74C3C; }
         .btn-delete:hover { background: #FDEDEC; }
 
-        /* Modal Detalhado */
+        /* Modal Detalhes */
         .modal-backdrop {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(5px);
             z-index: 1000;
@@ -528,57 +577,30 @@
             border: 2px solid var(--acropole-gold);
             box-shadow: 0 20px 50px rgba(0,0,0,0.3);
             position: relative;
-            transform: translateY(20px);
-            transition: transform 0.3s ease;
-        }
-
-        .modal-backdrop.active .modal-content {
-            transform: translateY(0);
         }
 
         .modal-close {
             position: absolute;
-            top: 15px;
-            right: 15px;
+            top: 15px; right: 15px;
             background: rgba(0, 0, 0, 0.5);
-            color: white;
-            border: none;
-            width: 32px;
-            height: 32px;
+            color: white; border: none;
+            width: 32px; height: 32px;
             border-radius: 50%;
-            cursor: pointer;
-            z-index: 10;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.2s;
-        }
-
-        .modal-close:hover {
-            background: var(--acropole-gold);
+            cursor: pointer; z-index: 10;
+            display: flex; align-items: center; justify-content: center;
         }
 
         .modal-img-container {
             width: 100%;
-            height: 320px;
+            height: 340px;
             background: #000;
         }
 
         .modal-img-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+            width: 100%; height: 100%; object-fit: cover;
         }
 
-        .modal-body {
-            padding: 2rem;
-        }
-
-        .modal-meta {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 1rem;
-        }
+        .modal-body { padding: 2rem; }
 
         .modal-badge {
             font-size: 0.8rem;
@@ -591,7 +613,7 @@
         .modal-title {
             font-size: 1.8rem;
             color: var(--acropole-green-dark);
-            margin-bottom: 1rem;
+            margin: 0.4rem 0 1rem;
         }
 
         .modal-text {
@@ -601,15 +623,12 @@
             white-space: pre-line;
         }
 
-        /* Modal Configuração Firebase */
+        /* Config Modal */
         .config-modal-content {
-            padding: 2rem;
-            background: white;
-            max-width: 550px;
-            border-radius: 12px;
+            padding: 2rem; background: white; max-width: 550px; border-radius: 12px;
         }
 
-        /* Rodapé */
+        /* Footer */
         footer {
             background: var(--acropole-green-dark);
             color: rgba(255, 255, 255, 0.8);
@@ -618,10 +637,6 @@
             margin-top: 4rem;
             border-top: 3px solid var(--acropole-gold);
             font-size: 0.9rem;
-        }
-
-        footer p {
-            margin-bottom: 0.5rem;
         }
 
         .footer-idealizer {
@@ -646,11 +661,6 @@
             font-size: 0.8rem;
         }
 
-        .footer-links a:hover {
-            text-decoration: underline;
-        }
-
-        /* Estado Vazio */
         .empty-state {
             text-align: center;
             padding: 4rem 1rem;
@@ -664,13 +674,11 @@
             margin-bottom: 1rem;
         }
 
-        /* Animação */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Responsive Adjustments */
         @media (max-width: 768px) {
             .hero h2 { font-size: 1.6rem; }
             .controls-section { flex-direction: column; align-items: stretch; }
@@ -680,7 +688,7 @@
 </head>
 <body>
 
-    <!-- Header / Nav -->
+    <!-- Header -->
     <header>
         <div class="header-container">
             <a href="#" class="logo-container">
@@ -708,64 +716,88 @@
         </div>
     </section>
 
-    <!-- Controles (Busca e Filtros) -->
+    <!-- Busca e Filtros de Civilizações -->
     <div class="controls-section">
         <div class="search-box">
             <i class="fa-solid fa-magnifying-glass"></i>
             <input type="text" id="searchInput" placeholder="Buscar por nome da peça ou significado..." oninput="filterPieces()">
         </div>
         <div class="filter-tags" id="categoryFilters">
-            <button class="filter-btn active" onclick="filterCategory('todos', this)">Todos</button>
-            <button class="filter-btn" onclick="filterCategory('Grécia', this)">Grécia</button>
-            <button class="filter-btn" onclick="filterCategory('Egito', this)">Egito</button>
-            <button class="filter-btn" onclick="filterCategory('Roma', this)">Roma</button>
-            <button class="filter-btn" onclick="filterCategory('Oriente', this)">Oriente</button>
-            <button class="filter-btn" onclick="filterCategory('Outros', this)">Outros</button>
+            <!-- Botões de filtro gerados dinamicamente via JS -->
         </div>
     </div>
 
-    <!-- Conteúdo Principal -->
     <main>
 
-        <!-- Painel de Administração / Cadastro do Diretor -->
-        <div class="admin-panel" id="adminPanel">
-            <div class="admin-header">
-                <h3><i class="fa-solid fa-pen-to-square"></i> <span id="formTitle">Adicionar Nova Peça ao Museu</span></h3>
-                <span style="font-size: 0.8rem; color: var(--text-muted);"><i class="fa-solid fa-circle-info"></i> Preencha as informações da peça para visualização pública</span>
+        <!-- Painel de Gerenciamento do Diretor (Visível no Modo Direção) -->
+        <div class="admin-sections" id="adminPanel">
+            
+            <!-- Painel 1: Cadastro / Edição de Peças -->
+            <div class="admin-card">
+                <div class="admin-header">
+                    <h3><i class="fa-solid fa-pen-to-square"></i> <span id="formTitle">Adicionar Nova Peça ao Acervo</span></h3>
+                    <span style="font-size: 0.8rem; color: var(--text-muted);"><i class="fa-solid fa-circle-info"></i> Preencha para publicar a peça</span>
+                </div>
+                <form id="pieceForm" onsubmit="handleFormSubmit(event)">
+                    <input type="hidden" id="pieceId">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="pieceName">Nome da Peça *</label>
+                            <input type="text" id="pieceName" required placeholder="Ex: Busto de Platão">
+                        </div>
+                        <div class="form-group">
+                            <label for="pieceCategory">Civilização / Era *</label>
+                            <select id="pieceCategory" required>
+                                <!-- Opções carregadas dinamicamente -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="pieceImageFile"><i class="fa-solid fa-upload"></i> Foto da Peça (Arquivo do Dispositivo)</label>
+                            <input type="file" id="pieceImageFile" accept="image/*" onchange="handleImageUpload(event)">
+                        </div>
+                        <div class="form-group">
+                            <label for="pieceImageUrl"><i class="fa-solid fa-link"></i> Ou Link da Imagem (URL)</label>
+                            <input type="url" id="pieceImageUrl" placeholder="https://exemplo.com/imagem.jpg" oninput="updatePreviewFromUrl()">
+                        </div>
+                    </div>
+
+                    <!-- Visualização Prévia da Imagem -->
+                    <div class="form-group full-width" style="margin-bottom: 1rem;">
+                        <label>Pré-visualização da Foto</label>
+                        <div class="image-preview-box" id="previewContainer">
+                            <span style="font-size: 0.85rem; color: var(--text-muted);"><i class="fa-regular fa-image"></i> Selecione um arquivo ou insira uma URL para ver a prévia</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group full-width" style="margin-bottom: 1.2rem;">
+                        <label for="pieceDescription">Descrição Filosófica & Histórica *</label>
+                        <textarea id="pieceDescription" rows="4" required placeholder="Explique o simbolismo, contexto e ensinamento moral/filosófico por trás desta peça..."></textarea>
+                    </div>
+
+                    <div>
+                        <button type="submit" class="btn-submit">
+                            <i class="fa-solid fa-floppy-disk"></i> Salvar Peça no Acervo
+                        </button>
+                        <button type="button" class="btn-cancel" onclick="resetForm()" id="cancelBtn" style="display:none;">Cancelar Edição</button>
+                    </div>
+                </form>
             </div>
-            <form id="pieceForm" onsubmit="handleFormSubmit(event)">
-                <input type="hidden" id="pieceId">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="pieceName">Nome da Peça *</label>
-                        <input type="text" id="pieceName" required placeholder="Ex: Bustos de Sócrates">
-                    </div>
-                    <div class="form-group">
-                        <label for="pieceCategory">Civilização / Era *</label>
-                        <select id="pieceCategory" required>
-                            <option value="Grécia">Grécia Clássica</option>
-                            <option value="Egito">Egito Antigo</option>
-                            <option value="Roma">Roma</option>
-                            <option value="Oriente">Oriente (Índia/China/Japão)</option>
-                            <option value="Outros">Outras Culturas</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="pieceImageUrl">Link da Imagem (URL) *</label>
-                        <input type="url" id="pieceImageUrl" required placeholder="https://exemplo.com/imagem.jpg">
-                    </div>
+
+            <!-- Painel 2: Gerenciador de Civilizações / Eras -->
+            <div class="admin-card">
+                <div class="admin-header">
+                    <h3><i class="fa-solid fa-tags"></i> Gerenciar Civilizações / Eras do Museu</h3>
+                    <span style="font-size: 0.8rem; color: var(--text-muted);">Adicione ou remova eras cadastradas</span>
                 </div>
-                <div class="form-group full-width" style="margin-bottom: 1.2rem;">
-                    <label for="pieceDescription">Descrição Filosófica & Histórica *</label>
-                    <textarea id="pieceDescription" rows="4" required placeholder="Explique o contexto histórico, simbolismo e o ensinamento filosófico por trás desta peça..."></textarea>
+                <div style="display: flex; gap: 10px; max-width: 500px; margin-bottom: 1rem;">
+                    <input type="text" id="newEraInput" placeholder="Nome da nova Era (Ex: Mesopotâmia, Índia, Renascença)" style="flex:1; padding: 0.6rem; border:1px solid var(--border-subtle); border-radius:6px;">
+                    <button type="button" class="btn-submit" onclick="addCustomEra()" style="padding: 0.6rem 1.2rem;"><i class="fa-solid fa-plus"></i> Adicionar Era</button>
                 </div>
-                <div>
-                    <button type="submit" class="btn-submit">
-                        <i class="fa-solid fa-floppy-disk"></i> Salvar Peça no Acervo
-                    </button>
-                    <button type="button" class="btn-cancel" onclick="resetForm()" id="cancelBtn" style="display:none;">Cancelar Edição</button>
+                <div class="eras-list" id="erasChipsList">
+                    <!-- Chips de eras carregados via JS -->
                 </div>
-            </form>
+            </div>
+
         </div>
 
         <!-- Grid da Galeria de Peças -->
@@ -792,16 +824,16 @@
         </div>
     </div>
 
-    <!-- Modal de Configuração do Firebase Cloud -->
+    <!-- Modal de Configuração do Firebase -->
     <div class="modal-backdrop" id="configModal">
         <div class="modal-content config-modal-content">
             <button class="modal-close" onclick="closeConfigModal()"><i class="fa-solid fa-xmark"></i></button>
-            <h3 style="font-family:'Cinzel'; color: var(--acropole-green-dark); margin-bottom: 1rem;"><i class="fa-solid fa-cloud"></i> Sincronização em Nuvem (Firebase)</h3>
+            <h3 style="font-family:'Cinzel'; color: var(--acropole-green-dark); margin-bottom: 1rem;"><i class="fa-solid fa-cloud"></i> Conectar Nuvem (Firebase)</h3>
             <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">
-                Para que o diretor cadastre peças e todas as pessoas vejam pela internet, insira as credenciais gratuitas do seu projeto Firebase Firestore:
+                Cole abaixo as credenciais do seu projeto Firebase para sincronizar todas as imagens e eras entre vários dispositivos:
             </p>
             <div class="form-group" style="margin-bottom: 1rem;">
-                <label>Firebase Config JSON / Credentials</label>
+                <label>Firebase Config JSON</label>
                 <textarea id="firebaseConfigInput" rows="6" style="font-family: monospace; font-size: 0.8rem;" placeholder='{
   "apiKey": "SUA_API_KEY",
   "authDomain": "seu-projeto.firebaseapp.com",
@@ -828,7 +860,10 @@
 
     <!-- Script Principal da Aplicação -->
     <script>
-        // Dados Iniciais Exemplo (Filosofia Clássica)
+        // Categorias / Eras Iniciais
+        const defaultEras = ['Grécia', 'Egito', 'Roma', 'Oriente', 'Outros'];
+
+        // Peças Iniciais Exemplo
         const initialPieces = [
             {
                 id: "1",
@@ -860,35 +895,43 @@
             }
         ];
 
-        // Estado da Aplicação
+        // Estado Global
         let pieces = [];
+        let eras = [];
         let isAdmin = false;
         let selectedCategory = 'todos';
+        let currentImageData = ""; // Guarda a imagem codificada Base64 ou URL
         let db = null;
-        let firebaseUnsub = null;
 
-        // Inicialização
         document.addEventListener('DOMContentLoaded', () => {
             initStorage();
             initFirebaseIfAvailable();
         });
 
         function initStorage() {
-            const stored = localStorage.getItem('museu_pieces');
-            if (!stored) {
-                pieces = [...initialPieces];
-                saveToLocalStorage();
-            } else {
-                pieces = JSON.parse(stored);
-            }
+            // Eras
+            const storedEras = localStorage.getItem('museu_eras');
+            eras = storedEras ? JSON.parse(storedEras) : [...defaultEras];
+            
+            // Peças
+            const storedPieces = localStorage.getItem('museu_pieces');
+            pieces = storedPieces ? JSON.parse(storedPieces) : [...initialPieces];
+
+            saveErasToStorage();
+            savePiecesToStorage();
+            updateEraDropdownAndFilters();
             renderGallery();
         }
 
-        function saveToLocalStorage() {
+        function saveErasToStorage() {
+            localStorage.setItem('museu_eras', JSON.stringify(eras));
+        }
+
+        function savePiecesToStorage() {
             localStorage.setItem('museu_pieces', JSON.stringify(pieces));
         }
 
-        // --- Gerenciamento do Firebase Cloud ---
+        // --- Firebase Integration ---
         function initFirebaseIfAvailable() {
             const configStr = localStorage.getItem('museu_firebase_config');
             if (configStr && window.FirebaseApp) {
@@ -898,21 +941,31 @@
                     const app = initializeApp(config);
                     db = getFirestore(app);
 
-                    // Inscreve para atualizações em tempo real
-                    firebaseUnsub = onSnapshot(collection(db, "pieces"), (snapshot) => {
+                    // Listener em Tempo Real para Peças
+                    onSnapshot(collection(db, "pieces"), (snapshot) => {
                         const cloudPieces = [];
-                        snapshot.forEach((doc) => {
-                            cloudPieces.push({ id: doc.id, ...doc.data() });
-                        });
+                        snapshot.forEach((doc) => cloudPieces.push({ id: doc.id, ...doc.data() }));
                         if (cloudPieces.length > 0) {
                             pieces = cloudPieces;
+                            savePiecesToStorage();
                             renderGallery();
+                        }
+                    });
+
+                    // Listener em Tempo Real para Eras
+                    onSnapshot(collection(db, "eras"), (snapshot) => {
+                        const cloudEras = [];
+                        snapshot.forEach((doc) => cloudEras.push(doc.data().name));
+                        if (cloudEras.length > 0) {
+                            eras = cloudEras;
+                            saveErasToStorage();
+                            updateEraDropdownAndFilters();
                         }
                     });
 
                     updateStatusBadge(true);
                 } catch (e) {
-                    console.error("Erro ao conectar Firebase:", e);
+                    console.error("Erro Firebase:", e);
                     updateStatusBadge(false);
                 }
             } else {
@@ -932,6 +985,106 @@
             }
         }
 
+        // --- Atualização Dinâmica de Eras ---
+        function updateEraDropdownAndFilters() {
+            // 1. Filtros Públicos
+            const filterContainer = document.getElementById('categoryFilters');
+            filterContainer.innerHTML = `
+                <button class="filter-btn ${selectedCategory === 'todos' ? 'active' : ''}" onclick="filterCategory('todos', this)">Todos</button>
+                ${eras.map(e => `
+                    <button class="filter-btn ${selectedCategory === e ? 'active' : ''}" onclick="filterCategory('${e}', this)">${e}</button>
+                `).join('')}
+            `;
+
+            // 2. Select do Formulário
+            const select = document.getElementById('pieceCategory');
+            select.innerHTML = eras.map(e => `<option value="${e}">${e}</option>`).join('');
+
+            // 3. Listagem de Eras no Modo Direção
+            const chipsList = document.getElementById('erasChipsList');
+            chipsList.innerHTML = eras.map(e => `
+                <span class="era-chip">
+                    ${e}
+                    <button type="button" onclick="removeEra('${e}')" title="Remover Era"><i class="fa-solid fa-circle-xmark"></i></button>
+                </span>
+            `).join('');
+        }
+
+        async function addCustomEra() {
+            const input = document.getElementById('newEraInput');
+            const newEra = input.value.trim();
+            if (!newEra) return;
+
+            if (!eras.includes(newEra)) {
+                eras.push(newEra);
+                saveErasToStorage();
+
+                if (db && window.FirebaseApp) {
+                    const { doc, setDoc } = window.FirebaseApp;
+                    await setDoc(doc(db, "eras", newEra), { name: newEra });
+                }
+
+                updateEraDropdownAndFilters();
+                input.value = '';
+                alert(`Era "${newEra}" adicionada com sucesso!`);
+            } else {
+                alert("Esta era já está cadastrada!");
+            }
+        }
+
+        async function removeEra(eraName) {
+            if (eras.length <= 1) {
+                alert("É necessário manter pelo menos uma era cadastrada!");
+                return;
+            }
+            if (!confirm(`Deseja remover a era "${eraName}"?`)) return;
+
+            eras = eras.filter(e => e !== eraName);
+            saveErasToStorage();
+
+            if (db && window.FirebaseApp) {
+                const { doc, deleteDoc } = window.FirebaseApp;
+                await deleteDoc(doc(db, "eras", eraName));
+            }
+
+            if (selectedCategory === eraName) selectedCategory = 'todos';
+            updateEraDropdownAndFilters();
+            renderGallery();
+        }
+
+        // --- Processamento e Upload de Imagem ---
+        function handleImageUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Converter Imagem do Computador/Celular para Base64 (Armazenamento Direto)
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                currentImageData = event.target.result;
+                document.getElementById('pieceImageUrl').value = '';
+                showPreview(currentImageData);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function updatePreviewFromUrl() {
+            const url = document.getElementById('pieceImageUrl').value.trim();
+            if (url) {
+                currentImageData = url;
+                showPreview(url);
+            }
+        }
+
+        function showPreview(src) {
+            const box = document.getElementById('previewContainer');
+            box.innerHTML = `<img src="${src}" alt="Pré-visualização" onerror="previewError()">`;
+        }
+
+        function previewError() {
+            const box = document.getElementById('previewContainer');
+            box.innerHTML = `<span style="font-size: 0.85rem; color: #E74C3C;"><i class="fa-solid fa-triangle-exclamation"></i> Não foi possível carregar esta imagem.</span>`;
+        }
+
         // --- Renderização da Galeria ---
         function renderGallery() {
             const grid = document.getElementById('galleryGrid');
@@ -947,8 +1100,8 @@
                 grid.innerHTML = `
                     <div class="empty-state">
                         <i class="fa-solid fa-building-columns"></i>
-                        <h3>Nenhuma peça encontrada</h3>
-                        <p>Tente alterar os termos da busca ou os filtros aplicados.</p>
+                        <h3>Nenhuma peça nesta era</h3>
+                        <p>Selecione outra era no menu superior ou adicione novas peças no Modo Direção.</p>
                     </div>
                 `;
                 return;
@@ -980,14 +1133,13 @@
             `).join('');
         }
 
-        // --- Modo Direção (Admin) ---
+        // --- Alternância do Modo Direção ---
         function toggleAdminMode() {
             const btn = document.getElementById('adminToggleBtn');
             const panel = document.getElementById('adminPanel');
 
             if (!isAdmin) {
                 const pwd = prompt("Digite a senha do Diretor para gerenciar o acervo:", "");
-                // Senha simples padrão de demonstração
                 if (pwd === "filosofia123" || pwd === "admin" || pwd === "") {
                     isAdmin = true;
                     btn.classList.add('active');
@@ -1007,19 +1159,18 @@
             }
         }
 
-        // --- CRUD Operações ---
+        // --- Salvar Peça ---
         async function handleFormSubmit(e) {
             e.preventDefault();
             const id = document.getElementById('pieceId').value;
             const name = document.getElementById('pieceName').value;
             const category = document.getElementById('pieceCategory').value;
-            const imageUrl = document.getElementById('pieceImageUrl').value;
             const description = document.getElementById('pieceDescription').value;
+            const finalImage = currentImageData || document.getElementById('pieceImageUrl').value || "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=800&q=80";
 
-            const pieceData = { name, category, imageUrl, description };
+            const pieceData = { name, category, imageUrl: finalImage, description };
 
             if (db && window.FirebaseApp) {
-                // Operação via Firebase Cloud
                 try {
                     const { collection, addDoc, doc, updateDoc } = window.FirebaseApp;
                     if (id) {
@@ -1029,11 +1180,9 @@
                     }
                 } catch (err) {
                     console.error("Erro Firebase:", err);
-                    alert("Erro ao salvar na nuvem, salvando localmente.");
                 }
             }
 
-            // Operação Local Fallback
             if (id) {
                 const index = pieces.findIndex(p => p.id === id);
                 if (index !== -1) pieces[index] = { ...pieces[index], ...pieceData };
@@ -1042,10 +1191,10 @@
                 pieces.unshift(newPiece);
             }
 
-            saveToLocalStorage();
+            savePiecesToStorage();
             renderGallery();
             resetForm();
-            alert("Peça salva com sucesso no museu!");
+            alert("Peça publicada no acervo com sucesso!");
         }
 
         function editPiece(id) {
@@ -1055,8 +1204,11 @@
             document.getElementById('pieceId').value = p.id;
             document.getElementById('pieceName').value = p.name;
             document.getElementById('pieceCategory').value = p.category;
-            document.getElementById('pieceImageUrl').value = p.imageUrl;
+            document.getElementById('pieceImageUrl').value = p.imageUrl.startsWith('data:') ? '' : p.imageUrl;
             document.getElementById('pieceDescription').value = p.description;
+
+            currentImageData = p.imageUrl;
+            showPreview(p.imageUrl);
 
             document.getElementById('formTitle').innerText = "Editar Peça do Acervo";
             document.getElementById('cancelBtn').style.display = "inline-block";
@@ -1071,27 +1223,30 @@
                     const { doc, deleteDoc } = window.FirebaseApp;
                     await deleteDoc(doc(db, "pieces", id));
                 } catch (e) {
-                    console.error("Erro ao deletar do Firebase:", e);
+                    console.error("Erro deletar Firebase:", e);
                 }
             }
 
             pieces = pieces.filter(p => p.id !== id);
-            saveToLocalStorage();
+            savePiecesToStorage();
             renderGallery();
         }
 
         function resetForm() {
             document.getElementById('pieceForm').reset();
             document.getElementById('pieceId').value = '';
-            document.getElementById('formTitle').innerText = "Adicionar Nova Peça ao Museu";
+            document.getElementById('pieceImageFile').value = '';
+            currentImageData = '';
+            document.getElementById('previewContainer').innerHTML = `<span style="font-size: 0.85rem; color: var(--text-muted);"><i class="fa-regular fa-image"></i> Selecione um arquivo ou insira uma URL para ver a prévia</span>`;
+            document.getElementById('formTitle').innerText = "Adicionar Nova Peça ao Acervo";
             document.getElementById('cancelBtn').style.display = "none";
         }
 
-        // --- Filtros & Modais ---
+        // --- Filtros e Modais ---
         function filterCategory(cat, btn) {
             selectedCategory = cat;
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
+            if(btn) btn.classList.add('active');
             renderGallery();
         }
 
@@ -1127,21 +1282,24 @@
             const val = document.getElementById('firebaseConfigInput').value;
             if (val.trim()) {
                 localStorage.setItem('museu_firebase_config', val.trim());
-                alert("Configurações salvas! Recarregando página para ativar...");
+                alert("Configurações salvas! Recarregando página para conectar...");
                 location.reload();
             }
         }
 
         function clearFirebaseConfig() {
             localStorage.removeItem('museu_firebase_config');
-            alert("Configuração do Firebase removida. Voltando ao modo local.");
+            alert("Firebase desconectado. Voltando ao modo local.");
             location.reload();
         }
 
         function resetDefaultData() {
-            if (confirm("Deseja restaurar o acervo de demonstração inicial?")) {
+            if (confirm("Deseja restaurar o acervo e as eras iniciais padrão?")) {
+                eras = [...defaultEras];
                 pieces = [...initialPieces];
-                saveToLocalStorage();
+                saveErasToStorage();
+                savePiecesToStorage();
+                updateEraDropdownAndFilters();
                 renderGallery();
             }
         }
