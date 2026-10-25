@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Museu da Escola </title>
+    <title>Museu da Escola - Acervo Virtual</title>
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -96,10 +96,11 @@
         }
 
         .logo-text h1 {
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             font-weight: 700;
             color: #FFFFFF;
             line-height: 1.2;
+            letter-spacing: 1px;
         }
 
         .logo-text span {
@@ -278,7 +279,7 @@
 
         .form-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1.2rem;
             margin-bottom: 1.2rem;
         }
@@ -316,7 +317,7 @@
 
         .image-preview-box {
             width: 100%;
-            height: 120px;
+            height: 140px;
             border: 2px dashed var(--border-subtle);
             border-radius: 8px;
             display: flex;
@@ -434,6 +435,20 @@
 
         .piece-card:hover .card-img {
             transform: scale(1.05);
+        }
+
+        .card-code-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: var(--acropole-gold);
+            color: var(--acropole-green-dark);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
 
         .card-tag {
@@ -579,6 +594,23 @@
 
         .modal-body { padding: 2rem; }
 
+        .modal-meta {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-code-badge {
+            background: var(--acropole-gold);
+            color: var(--acropole-green-dark);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+        }
+
         .modal-badge {
             font-size: 0.8rem;
             font-family: 'Cinzel', serif;
@@ -590,7 +622,7 @@
         .modal-title {
             font-size: 1.8rem;
             color: var(--acropole-green-dark);
-            margin: 0.4rem 0 1rem;
+            margin: 0.2rem 0 1rem;
         }
 
         .modal-text {
@@ -647,13 +679,13 @@
 </head>
 <body>
 
-    <!-- Header -->
+    <!-- Header com o novo nome: Museu da Escola -->
     <header>
         <div class="header-container">
             <a href="#" class="logo-container">
                 <i class="fa-solid fa-landmark logo-icon"></i>
                 <div class="logo-text">
-                    <h1>MUSEU DA ESCOLA DE FILOSOFIA</h1>
+                    <h1>MUSEU DA ESCOLA</h1>
                     <span>Acervo de Peças & Símbolos</span>
                 </div>
             </a>
@@ -675,7 +707,7 @@
     <div class="controls-section">
         <div class="search-box">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="searchInput" placeholder="Buscar por nome da peça ou significado..." oninput="filterPieces()">
+            <input type="text" id="searchInput" placeholder="Buscar por número (ex: 01), nome da peça ou significado..." oninput="filterPieces()">
         </div>
         <div class="filter-tags" id="categoryFilters">
             <!-- Botões de filtro gerados dinamicamente via JS -->
@@ -691,11 +723,15 @@
             <div class="admin-card">
                 <div class="admin-header">
                     <h3><i class="fa-solid fa-pen-to-square"></i> <span id="formTitle">Adicionar Nova Peça ao Acervo</span></h3>
-                    <span style="font-size: 0.8rem; color: var(--text-muted);"><i class="fa-solid fa-circle-info"></i> Preencha para publicar a peça</span>
+                    <span style="font-size: 0.8rem; color: var(--text-muted);"><i class="fa-solid fa-circle-info"></i> Preencha para publicar a peça na nuvem</span>
                 </div>
                 <form id="pieceForm" onsubmit="handleFormSubmit(event)">
                     <input type="hidden" id="pieceId">
                     <div class="form-grid">
+                        <div class="form-group" style="max-width: 140px;">
+                            <label for="pieceCode">Nº Cadastro *</label>
+                            <input type="text" id="pieceCode" required placeholder="Ex: 01" style="font-weight: bold; text-align: center;">
+                        </div>
                         <div class="form-group">
                             <label for="pieceName">Nome da Peça *</label>
                             <input type="text" id="pieceName" required placeholder="Ex: Busto de Platão">
@@ -707,20 +743,16 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="pieceImageFile"><i class="fa-solid fa-upload"></i> Foto da Peça (Arquivo do Dispositivo)</label>
+                            <label for="pieceImageFile"><i class="fa-solid fa-camera"></i> Selecionar Foto da Peça *</label>
                             <input type="file" id="pieceImageFile" accept="image/*" onchange="handleImageUpload(event)">
-                        </div>
-                        <div class="form-group">
-                            <label for="pieceImageUrl"><i class="fa-solid fa-link"></i> Ou Link da Imagem (URL)</label>
-                            <input type="url" id="pieceImageUrl" placeholder="https://exemplo.com/imagem.jpg" oninput="updatePreviewFromUrl()">
                         </div>
                     </div>
 
-                    <!-- Visualização Prévia da Imagem -->
+                    <!-- Visualização Prévia da Foto -->
                     <div class="form-group full-width" style="margin-bottom: 1rem;">
                         <label>Pré-visualização da Foto</label>
                         <div class="image-preview-box" id="previewContainer">
-                            <span style="font-size: 0.85rem; color: var(--text-muted);"><i class="fa-regular fa-image"></i> Selecione um arquivo ou insira uma URL para ver a prévia</span>
+                            <span style="font-size: 0.85rem; color: var(--text-muted);"><i class="fa-regular fa-image"></i> Escolha um arquivo de imagem do dispositivo</span>
                         </div>
                     </div>
 
@@ -771,6 +803,7 @@
             </div>
             <div class="modal-body">
                 <div class="modal-meta">
+                    <span class="modal-code-badge" id="modalCode"></span>
                     <span class="modal-badge" id="modalCategory"></span>
                 </div>
                 <h2 class="modal-title" id="modalTitle"></h2>
@@ -781,7 +814,7 @@
 
     <!-- Rodapé -->
     <footer>
-        <p>&copy; Museu da Escola de Filosofia - Preservando a Sabedoria Atemporal</p>
+        <p>&copy; Museu da Escola - Preservando a Sabedoria Atemporal</p>
         <p class="footer-idealizer">Idealizado por : Antonio Santoro</p>
     </footer>
 
@@ -802,6 +835,7 @@
         const initialPieces = [
             {
                 id: "1",
+                code: "01",
                 name: "Estátua de Atena Parthenos",
                 category: "Grécia",
                 imageUrl: "https://images.unsplash.com/photo-1571115764595-644a1f56a55c?auto=format&fit=crop&w=800&q=80",
@@ -809,6 +843,7 @@
             },
             {
                 id: "2",
+                code: "02",
                 name: "Busto de Sócrates",
                 category: "Grécia",
                 imageUrl: "https://images.unsplash.com/photo-1564399579883-451a5d44ec08?auto=format&fit=crop&w=800&q=80",
@@ -816,6 +851,7 @@
             },
             {
                 id: "3",
+                code: "03",
                 name: "Busto do Imperador Sêneca",
                 category: "Roma",
                 imageUrl: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=800&q=80",
@@ -823,6 +859,7 @@
             },
             {
                 id: "4",
+                code: "04",
                 name: "Máscara de Tutancâmon",
                 category: "Egito",
                 imageUrl: "https://images.unsplash.com/photo-1608889825103-706a0268273c?auto=format&fit=crop&w=800&q=80",
@@ -839,6 +876,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             initFirebase();
+            suggestNextCode();
         });
 
         function initFirebase() {
@@ -858,10 +896,12 @@
                     } else {
                         pieces = [...initialPieces];
                     }
+                    suggestNextCode();
                     renderGallery();
                 }, (error) => {
                     console.error("Erro Firebase Peças:", error);
                     pieces = [...initialPieces];
+                    suggestNextCode();
                     renderGallery();
                 });
 
@@ -888,6 +928,14 @@
                 updateEraDropdownAndFilters();
                 renderGallery();
             }
+        }
+
+        // Sugerir automaticamente o próximo número de cadastro (ex: 01, 02, 03...)
+        function suggestNextCode() {
+            if (document.getElementById('pieceId').value) return; // Se for edição não altera
+            const count = pieces.length + 1;
+            const nextCode = count < 10 ? `0${count}` : `${count}`;
+            document.getElementById('pieceCode').value = nextCode;
         }
 
         function updateEraDropdownAndFilters() {
@@ -958,18 +1006,9 @@
             const reader = new FileReader();
             reader.onload = function(event) {
                 currentImageData = event.target.result;
-                document.getElementById('pieceImageUrl').value = '';
                 showPreview(currentImageData);
             };
             reader.readAsDataURL(file);
-        }
-
-        function updatePreviewFromUrl() {
-            const url = document.getElementById('pieceImageUrl').value.trim();
-            if (url) {
-                currentImageData = url;
-                showPreview(url);
-            }
         }
 
         function showPreview(src) {
@@ -984,11 +1023,15 @@
 
         function renderGallery() {
             const grid = document.getElementById('galleryGrid');
-            const searchVal = document.getElementById('searchInput').value.toLowerCase();
+            const searchVal = document.getElementById('searchInput').value.toLowerCase().trim();
 
             const filtered = pieces.filter(p => {
                 const matchCategory = selectedCategory === 'todos' || p.category === selectedCategory;
-                const matchSearch = p.name.toLowerCase().includes(searchVal) || p.description.toLowerCase().includes(searchVal);
+                const pCode = (p.code || "").toLowerCase();
+                const pName = (p.name || "").toLowerCase();
+                const pDesc = (p.description || "").toLowerCase();
+                
+                const matchSearch = pCode.includes(searchVal) || pName.includes(searchVal) || pDesc.includes(searchVal);
                 return matchCategory && matchSearch;
             });
 
@@ -996,16 +1039,20 @@
                 grid.innerHTML = `
                     <div class="empty-state">
                         <i class="fa-solid fa-building-columns"></i>
-                        <h3>Nenhuma peça encontrada nesta era</h3>
-                        <p>Selecione outra era ou altere os termos da busca.</p>
+                        <h3>Nenhuma peça encontrada</h3>
+                        <p>Tente buscar por outro número (ex: 01) ou alterar os filtros.</p>
                     </div>
                 `;
                 return;
             }
 
+            // Ordenar por número de cadastro
+            filtered.sort((a, b) => parseInt(a.code || 0) - parseInt(b.code || 0));
+
             grid.innerHTML = filtered.map(p => `
                 <div class="piece-card">
                     <div class="card-img-wrapper">
+                        <span class="card-code-badge">Nº ${p.code || '00'}</span>
                         <img src="${p.imageUrl}" alt="${p.name}" class="card-img" onerror="this.src='https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=800&q=80'">
                         <span class="card-tag">${p.category}</span>
                     </div>
@@ -1057,12 +1104,19 @@
         async function handleFormSubmit(e) {
             e.preventDefault();
             const id = document.getElementById('pieceId').value;
+            const code = document.getElementById('pieceCode').value.trim();
             const name = document.getElementById('pieceName').value;
             const category = document.getElementById('pieceCategory').value;
             const description = document.getElementById('pieceDescription').value;
-            const finalImage = currentImageData || document.getElementById('pieceImageUrl').value || "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=800&q=80";
 
-            const pieceData = { name, category, imageUrl: finalImage, description };
+            if (!currentImageData && !id) {
+                alert("Por favor, selecione uma foto para a peça!");
+                return;
+            }
+
+            const finalImage = currentImageData || "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=800&q=80";
+
+            const pieceData = { code, name, category, imageUrl: finalImage, description };
 
             if (db && window.FirebaseApp) {
                 try {
@@ -1072,7 +1126,7 @@
                     } else {
                         await addDoc(collection(db, "pieces"), pieceData);
                     }
-                    alert("Peça publicada na nuvem com sucesso!");
+                    alert("Peça salva na nuvem com sucesso!");
                 } catch (err) {
                     console.error("Erro ao salvar no Firebase:", err);
                     alert("Erro ao salvar na nuvem.");
@@ -1087,9 +1141,9 @@
             if (!p) return;
 
             document.getElementById('pieceId').value = p.id;
+            document.getElementById('pieceCode').value = p.code || '01';
             document.getElementById('pieceName').value = p.name;
             document.getElementById('pieceCategory').value = p.category;
-            document.getElementById('pieceImageUrl').value = p.imageUrl.startsWith('data:') ? '' : p.imageUrl;
             document.getElementById('pieceDescription').value = p.description;
 
             currentImageData = p.imageUrl;
@@ -1118,9 +1172,10 @@
             document.getElementById('pieceId').value = '';
             document.getElementById('pieceImageFile').value = '';
             currentImageData = '';
-            document.getElementById('previewContainer').innerHTML = `<span style="font-size: 0.85rem; color: var(--text-muted);"><i class="fa-regular fa-image"></i> Selecione um arquivo ou insira uma URL para ver a prévia</span>`;
+            document.getElementById('previewContainer').innerHTML = `<span style="font-size: 0.85rem; color: var(--text-muted);"><i class="fa-regular fa-image"></i> Escolha um arquivo de imagem do dispositivo</span>`;
             document.getElementById('formTitle').innerText = "Adicionar Nova Peça ao Acervo";
             document.getElementById('cancelBtn').style.display = "none";
+            suggestNextCode();
         }
 
         function filterCategory(cat, btn) {
@@ -1139,6 +1194,7 @@
             if (!p) return;
 
             document.getElementById('modalImg').src = p.imageUrl;
+            document.getElementById('modalCode').innerText = `Nº ${p.code || '00'}`;
             document.getElementById('modalCategory').innerText = p.category;
             document.getElementById('modalTitle').innerText = p.name;
             document.getElementById('modalDescription').innerText = p.description;
