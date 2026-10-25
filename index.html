@@ -163,29 +163,6 @@
             opacity: 0.95;
         }
 
-        .sync-status {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.75rem;
-            margin-top: 12px;
-            padding: 4px 12px;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(4px);
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background-color: #2ECC71;
-        }
-
-        .status-dot.demo {
-            background-color: #F1C40F;
-        }
-
         /* Controles de Busca e Filtros */
         .controls-section {
             max-width: 1200px;
@@ -623,11 +600,6 @@
             white-space: pre-line;
         }
 
-        /* Config Modal */
-        .config-modal-content {
-            padding: 2rem; background: white; max-width: 550px; border-radius: 12px;
-        }
-
         /* Footer */
         footer {
             background: var(--acropole-green-dark);
@@ -646,19 +618,6 @@
             font-weight: 600;
             letter-spacing: 1px;
             margin-top: 0.5rem;
-        }
-
-        .footer-links {
-            margin-top: 1rem;
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-        }
-
-        .footer-links a {
-            color: var(--acropole-gold-light);
-            text-decoration: none;
-            font-size: 0.8rem;
         }
 
         .empty-state {
@@ -709,10 +668,6 @@
         <div class="hero-content">
             <h2>Sabedoria Expressa em Formas e Símbolos</h2>
             <p>"A arte clássica é uma ponte entre o visível e o invisível, revelando verdades atemporais da alma."</p>
-            <div class="sync-status" id="syncBadge">
-                <span class="status-dot demo" id="statusDot"></span>
-                <span id="statusText">Modo Local (Offline)</span>
-            </div>
         </div>
     </section>
 
@@ -824,46 +779,26 @@
         </div>
     </div>
 
-    <!-- Modal de Configuração do Firebase -->
-    <div class="modal-backdrop" id="configModal">
-        <div class="modal-content config-modal-content">
-            <button class="modal-close" onclick="closeConfigModal()"><i class="fa-solid fa-xmark"></i></button>
-            <h3 style="font-family:'Cinzel'; color: var(--acropole-green-dark); margin-bottom: 1rem;"><i class="fa-solid fa-cloud"></i> Conectar Nuvem (Firebase)</h3>
-            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">
-                Cole abaixo as credenciais do seu projeto Firebase para sincronizar todas as imagens e eras entre vários dispositivos:
-            </p>
-            <div class="form-group" style="margin-bottom: 1rem;">
-                <label>Firebase Config JSON</label>
-                <textarea id="firebaseConfigInput" rows="6" style="font-family: monospace; font-size: 0.8rem;" placeholder='{
-  "apiKey": "SUA_API_KEY",
-  "authDomain": "seu-projeto.firebaseapp.com",
-  "projectId": "seu-projeto",
-  "storageBucket": "seu-projeto.appspot.com",
-  "messagingSenderId": "123456789",
-  "appId": "1:123456789:web:abcdef"
-}'></textarea>
-            </div>
-            <button class="btn-submit" onclick="saveFirebaseConfig()"><i class="fa-solid fa-plug"></i> Conectar Nuvem</button>
-            <button class="btn-cancel" onclick="clearFirebaseConfig()">Desconectar</button>
-        </div>
-    </div>
-
     <!-- Rodapé -->
     <footer>
         <p>&copy; Museu da Escola de Filosofia - Preservando a Sabedoria Atemporal</p>
         <p class="footer-idealizer">Idealizado por : Antonio Santoro</p>
-        <div class="footer-links">
-            <a href="javascript:void(0)" onclick="openConfigModal()"><i class="fa-solid fa-gear"></i> Configurar Nuvem</a>
-            <a href="javascript:void(0)" onclick="resetDefaultData()"><i class="fa-solid fa-rotate"></i> Restaurar Dados Exemplo</a>
-        </div>
     </footer>
 
-    <!-- Script Principal da Aplicação -->
+    <!-- Script Principal com Firebase Embutido Automático -->
     <script>
-        // Categorias / Eras Iniciais
+        // Configuração do Firebase Automática e Conectada na Nuvem
+        const firebaseConfig = {
+            apiKey: "AIzaSyDt8-aUuEWau_AFEjgTIn3dat-gtW2Yw8Y",
+            authDomain: "museu-filosofia.firebaseapp.com",
+            projectId: "museu-filosofia",
+            storageBucket: "museu-filosofia.firebasestorage.app",
+            messagingSenderId: "788162256710",
+            appId: "1:788162256710:web:e6cc4a649dad5c883dcf47"
+        };
+
         const defaultEras = ['Grécia', 'Egito', 'Roma', 'Oriente', 'Outros'];
 
-        // Peças Iniciais Exemplo
         const initialPieces = [
             {
                 id: "1",
@@ -895,99 +830,67 @@
             }
         ];
 
-        // Estado Global
         let pieces = [];
         let eras = [];
         let isAdmin = false;
         let selectedCategory = 'todos';
-        let currentImageData = ""; // Guarda a imagem codificada Base64 ou URL
+        let currentImageData = "";
         let db = null;
 
         document.addEventListener('DOMContentLoaded', () => {
-            initStorage();
-            initFirebaseIfAvailable();
+            initFirebase();
         });
 
-        function initStorage() {
-            // Eras
-            const storedEras = localStorage.getItem('museu_eras');
-            eras = storedEras ? JSON.parse(storedEras) : [...defaultEras];
-            
-            // Peças
-            const storedPieces = localStorage.getItem('museu_pieces');
-            pieces = storedPieces ? JSON.parse(storedPieces) : [...initialPieces];
+        function initFirebase() {
+            try {
+                const { initializeApp } = window.FirebaseApp;
+                const { getFirestore, collection, onSnapshot } = window.FirebaseApp;
+                
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
 
-            saveErasToStorage();
-            savePiecesToStorage();
-            updateEraDropdownAndFilters();
-            renderGallery();
-        }
+                // Escutar Peças em tempo real da nuvem
+                onSnapshot(collection(db, "pieces"), (snapshot) => {
+                    const cloudPieces = [];
+                    snapshot.forEach((doc) => cloudPieces.push({ id: doc.id, ...doc.data() }));
+                    if (cloudPieces.length > 0) {
+                        pieces = cloudPieces;
+                    } else {
+                        pieces = [...initialPieces];
+                    }
+                    renderGallery();
+                }, (error) => {
+                    console.error("Erro Firebase Peças:", error);
+                    pieces = [...initialPieces];
+                    renderGallery();
+                });
 
-        function saveErasToStorage() {
-            localStorage.setItem('museu_eras', JSON.stringify(eras));
-        }
+                // Escutar Eras em tempo real da nuvem
+                onSnapshot(collection(db, "eras"), (snapshot) => {
+                    const cloudEras = [];
+                    snapshot.forEach((doc) => cloudEras.push(doc.data().name));
+                    if (cloudEras.length > 0) {
+                        eras = cloudEras;
+                    } else {
+                        eras = [...defaultEras];
+                    }
+                    updateEraDropdownAndFilters();
+                    renderGallery();
+                }, (error) => {
+                    eras = [...defaultEras];
+                    updateEraDropdownAndFilters();
+                });
 
-        function savePiecesToStorage() {
-            localStorage.setItem('museu_pieces', JSON.stringify(pieces));
-        }
-
-        // --- Firebase Integration ---
-        function initFirebaseIfAvailable() {
-            const configStr = localStorage.getItem('museu_firebase_config');
-            if (configStr && window.FirebaseApp) {
-                try {
-                    const config = JSON.parse(configStr);
-                    const { initializeApp, getFirestore, collection, onSnapshot } = window.FirebaseApp;
-                    const app = initializeApp(config);
-                    db = getFirestore(app);
-
-                    // Listener em Tempo Real para Peças
-                    onSnapshot(collection(db, "pieces"), (snapshot) => {
-                        const cloudPieces = [];
-                        snapshot.forEach((doc) => cloudPieces.push({ id: doc.id, ...doc.data() }));
-                        if (cloudPieces.length > 0) {
-                            pieces = cloudPieces;
-                            savePiecesToStorage();
-                            renderGallery();
-                        }
-                    });
-
-                    // Listener em Tempo Real para Eras
-                    onSnapshot(collection(db, "eras"), (snapshot) => {
-                        const cloudEras = [];
-                        snapshot.forEach((doc) => cloudEras.push(doc.data().name));
-                        if (cloudEras.length > 0) {
-                            eras = cloudEras;
-                            saveErasToStorage();
-                            updateEraDropdownAndFilters();
-                        }
-                    });
-
-                    updateStatusBadge(true);
-                } catch (e) {
-                    console.error("Erro Firebase:", e);
-                    updateStatusBadge(false);
-                }
-            } else {
-                updateStatusBadge(false);
+            } catch (e) {
+                console.error("Erro ao iniciar Firebase:", e);
+                eras = [...defaultEras];
+                pieces = [...initialPieces];
+                updateEraDropdownAndFilters();
+                renderGallery();
             }
         }
 
-        function updateStatusBadge(isOnline) {
-            const dot = document.getElementById('statusDot');
-            const text = document.getElementById('statusText');
-            if (isOnline) {
-                dot.className = "status-dot";
-                text.innerText = "Nuvem Sincronizada (Firebase)";
-            } else {
-                dot.className = "status-dot demo";
-                text.innerText = "Modo Local (Navegador)";
-            }
-        }
-
-        // --- Atualização Dinâmica de Eras ---
         function updateEraDropdownAndFilters() {
-            // 1. Filtros Públicos
             const filterContainer = document.getElementById('categoryFilters');
             filterContainer.innerHTML = `
                 <button class="filter-btn ${selectedCategory === 'todos' ? 'active' : ''}" onclick="filterCategory('todos', this)">Todos</button>
@@ -996,11 +899,9 @@
                 `).join('')}
             `;
 
-            // 2. Select do Formulário
             const select = document.getElementById('pieceCategory');
             select.innerHTML = eras.map(e => `<option value="${e}">${e}</option>`).join('');
 
-            // 3. Listagem de Eras no Modo Direção
             const chipsList = document.getElementById('erasChipsList');
             chipsList.innerHTML = eras.map(e => `
                 <span class="era-chip">
@@ -1017,7 +918,6 @@
 
             if (!eras.includes(newEra)) {
                 eras.push(newEra);
-                saveErasToStorage();
 
                 if (db && window.FirebaseApp) {
                     const { doc, setDoc } = window.FirebaseApp;
@@ -1026,7 +926,7 @@
 
                 updateEraDropdownAndFilters();
                 input.value = '';
-                alert(`Era "${newEra}" adicionada com sucesso!`);
+                alert(`Era "${newEra}" adicionada com sucesso na nuvem!`);
             } else {
                 alert("Esta era já está cadastrada!");
             }
@@ -1037,10 +937,9 @@
                 alert("É necessário manter pelo menos uma era cadastrada!");
                 return;
             }
-            if (!confirm(`Deseja remover a era "${eraName}"?`)) return;
+            if (!confirm(`Deseja remover a era "${eraName}" da nuvem?`)) return;
 
             eras = eras.filter(e => e !== eraName);
-            saveErasToStorage();
 
             if (db && window.FirebaseApp) {
                 const { doc, deleteDoc } = window.FirebaseApp;
@@ -1052,12 +951,10 @@
             renderGallery();
         }
 
-        // --- Processamento e Upload de Imagem ---
         function handleImageUpload(e) {
             const file = e.target.files[0];
             if (!file) return;
 
-            // Converter Imagem do Computador/Celular para Base64 (Armazenamento Direto)
             const reader = new FileReader();
             reader.onload = function(event) {
                 currentImageData = event.target.result;
@@ -1085,7 +982,6 @@
             box.innerHTML = `<span style="font-size: 0.85rem; color: #E74C3C;"><i class="fa-solid fa-triangle-exclamation"></i> Não foi possível carregar esta imagem.</span>`;
         }
 
-        // --- Renderização da Galeria ---
         function renderGallery() {
             const grid = document.getElementById('galleryGrid');
             const searchVal = document.getElementById('searchInput').value.toLowerCase();
@@ -1100,8 +996,8 @@
                 grid.innerHTML = `
                     <div class="empty-state">
                         <i class="fa-solid fa-building-columns"></i>
-                        <h3>Nenhuma peça nesta era</h3>
-                        <p>Selecione outra era no menu superior ou adicione novas peças no Modo Direção.</p>
+                        <h3>Nenhuma peça encontrada nesta era</h3>
+                        <p>Selecione outra era ou altere os termos da busca.</p>
                     </div>
                 `;
                 return;
@@ -1133,7 +1029,6 @@
             `).join('');
         }
 
-        // --- Alternância do Modo Direção ---
         function toggleAdminMode() {
             const btn = document.getElementById('adminToggleBtn');
             const panel = document.getElementById('adminPanel');
@@ -1159,7 +1054,6 @@
             }
         }
 
-        // --- Salvar Peça ---
         async function handleFormSubmit(e) {
             e.preventDefault();
             const id = document.getElementById('pieceId').value;
@@ -1178,23 +1072,14 @@
                     } else {
                         await addDoc(collection(db, "pieces"), pieceData);
                     }
+                    alert("Peça publicada na nuvem com sucesso!");
                 } catch (err) {
-                    console.error("Erro Firebase:", err);
+                    console.error("Erro ao salvar no Firebase:", err);
+                    alert("Erro ao salvar na nuvem.");
                 }
             }
 
-            if (id) {
-                const index = pieces.findIndex(p => p.id === id);
-                if (index !== -1) pieces[index] = { ...pieces[index], ...pieceData };
-            } else {
-                const newPiece = { id: Date.now().toString(), ...pieceData };
-                pieces.unshift(newPiece);
-            }
-
-            savePiecesToStorage();
-            renderGallery();
             resetForm();
-            alert("Peça publicada no acervo com sucesso!");
         }
 
         function editPiece(id) {
@@ -1216,20 +1101,16 @@
         }
 
         async function deletePiece(id) {
-            if (!confirm("Tem certeza que deseja remover esta peça do museu?")) return;
+            if (!confirm("Tem certeza que deseja remover esta peça do museu na nuvem?")) return;
 
             if (db && window.FirebaseApp) {
                 try {
                     const { doc, deleteDoc } = window.FirebaseApp;
                     await deleteDoc(doc(db, "pieces", id));
                 } catch (e) {
-                    console.error("Erro deletar Firebase:", e);
+                    console.error("Erro ao deletar no Firebase:", e);
                 }
             }
-
-            pieces = pieces.filter(p => p.id !== id);
-            savePiecesToStorage();
-            renderGallery();
         }
 
         function resetForm() {
@@ -1242,7 +1123,6 @@
             document.getElementById('cancelBtn').style.display = "none";
         }
 
-        // --- Filtros e Modais ---
         function filterCategory(cat, btn) {
             selectedCategory = cat;
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -1268,40 +1148,6 @@
 
         function closeModal() {
             document.getElementById('pieceModal').classList.remove('active');
-        }
-
-        function openConfigModal() {
-            document.getElementById('configModal').classList.add('active');
-        }
-
-        function closeConfigModal() {
-            document.getElementById('configModal').classList.remove('active');
-        }
-
-        function saveFirebaseConfig() {
-            const val = document.getElementById('firebaseConfigInput').value;
-            if (val.trim()) {
-                localStorage.setItem('museu_firebase_config', val.trim());
-                alert("Configurações salvas! Recarregando página para conectar...");
-                location.reload();
-            }
-        }
-
-        function clearFirebaseConfig() {
-            localStorage.removeItem('museu_firebase_config');
-            alert("Firebase desconectado. Voltando ao modo local.");
-            location.reload();
-        }
-
-        function resetDefaultData() {
-            if (confirm("Deseja restaurar o acervo e as eras iniciais padrão?")) {
-                eras = [...defaultEras];
-                pieces = [...initialPieces];
-                saveErasToStorage();
-                savePiecesToStorage();
-                updateEraDropdownAndFilters();
-                renderGallery();
-            }
         }
     </script>
 </body>
