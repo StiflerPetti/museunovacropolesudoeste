@@ -565,7 +565,7 @@
         .btn-delete { color: #E74C3C; }
         .btn-delete:hover { background: #FDEDEC; }
 
-        /* Modal Detalhes */
+        /* Modal Detalhes com Imagem Completa (Sem Cortes) */
         .modal-backdrop {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -611,12 +611,19 @@
 
         .modal-img-container {
             width: 100%;
-            height: 340px;
-            background: #000;
+            max-height: 400px;
+            background: #111;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
         }
 
         .modal-img-container img {
-            width: 100%; height: 100%; object-fit: cover;
+            width: 100%;
+            height: 100%;
+            max-height: 400px;
+            object-fit: contain;
         }
 
         .modal-body { padding: 2rem; }
@@ -737,7 +744,7 @@
             <input type="text" id="searchInput" placeholder="Buscar por número (ex: 01), nome da peça ou significado..." oninput="filterPieces()">
         </div>
         <div class="filter-tags" id="categoryFilters">
-            <!-- Botões de filtro gerados dinamente via JS -->
+            <!-- Botões de filtro gerados dinamicamente via JS -->
         </div>
     </div>
 
