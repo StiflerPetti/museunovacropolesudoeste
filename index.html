@@ -565,7 +565,7 @@
         .btn-delete { color: #E74C3C; }
         .btn-delete:hover { background: #FDEDEC; }
 
-        /* Modal Detalhes com Imagem Completa (Sem Cortes) */
+        /* Modal Detalhes com Imagem Completa e Sem Cortes */
         .modal-backdrop {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -611,19 +611,19 @@
 
         .modal-img-container {
             width: 100%;
-            max-height: 400px;
             background: #111;
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
+            padding: 10px;
         }
 
         .modal-img-container img {
-            width: 100%;
-            height: 100%;
-            max-height: 400px;
+            max-width: 100%;
+            max-height: 380px;
             object-fit: contain;
+            display: block;
+            margin: 0 auto;
         }
 
         .modal-body { padding: 2rem; }
@@ -724,7 +724,7 @@
                 </div>
             </a>
             <button class="admin-toggle-btn" id="adminToggleBtn" onclick="toggleAdminMode()">
-                <i class="fa-solid fa-lock"></i> Modo Direção
+                <i class="fa-solid fa-lock"></i> Modo Adm
             </button>
         </div>
     </header>
