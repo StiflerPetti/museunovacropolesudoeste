@@ -565,7 +565,7 @@
         .btn-delete { color: #E74C3C; }
         .btn-delete:hover { background: #FDEDEC; }
 
-        /* Modal Detalhes com Imagem Completa e Sem Cortes */
+        /* Modal Detalhes com Imagem Completa e Botão Fechar Ampliado */
         .modal-backdrop {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -601,12 +601,21 @@
         .modal-close {
             position: absolute;
             top: 15px; right: 15px;
-            background: rgba(0, 0, 0, 0.5);
-            color: white; border: none;
-            width: 32px; height: 32px;
+            background: var(--acropole-green-dark);
+            color: var(--acropole-gold-light);
+            border: 2px solid var(--acropole-gold);
+            width: 48px; height: 48px;
             border-radius: 50%;
             cursor: pointer; z-index: 10;
             display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--acropole-gold);
+            color: var(--acropole-green-dark);
         }
 
         .modal-img-container {
@@ -660,7 +669,7 @@
         }
 
         .modal-text {
-            font-size: 1rem;
+            font-size: 1.05rem;
             line-height: 1.8;
             color: var(--text-main);
             white-space: pre-line;
@@ -724,7 +733,7 @@
                 </div>
             </a>
             <button class="admin-toggle-btn" id="adminToggleBtn" onclick="toggleAdminMode()">
-                <i class="fa-solid fa-lock"></i> Modo Adm
+                <i class="fa-solid fa-lock"></i> Modo Direção
             </button>
         </div>
     </header>
@@ -857,6 +866,14 @@
                     <span class="modal-badge" id="modalCategory"></span>
                 </div>
                 <h2 class="modal-title" id="modalTitle"></h2>
+                
+                <!-- Botão de Acessibilidade: Leitor de Voz -->
+                <div style="margin-bottom: 1.5rem;">
+                    <button type="button" class="btn-submit" onclick="speakDescription()" style="background: var(--acropole-gold); color: var(--acropole-green-dark); font-weight: bold; width: 100%; justify-content: center; padding: 0.9rem; font-size: 1rem;">
+                        <i class="fa-solid fa-volume-high" style="font-size: 1.2rem;"></i> Ouvir Descrição em Áudio
+                    </button>
+                </div>
+
                 <p class="modal-text font-serif" id="modalDescription"></p>
             </div>
         </div>
@@ -868,7 +885,7 @@
         <p class="footer-idealizer">Idealizado por : Antonio Santoro</p>
     </footer>
 
-    <!-- Script Principal com Redimensionador & Gerador de PDF -->
+    <!-- Script Principal com Redimensionador & Gerador de PDF & Acessibilidade -->
     <script>
         // Configuração do Firebase
         const firebaseConfig = {
@@ -893,6 +910,29 @@
             initFirebase();
             suggestNextCode();
         });
+
+        // Leitor de Voz (Text-to-Speech) para deficientes visuais e idosos
+        function speakDescription() {
+            if (!('speechSynthesis' in window)) {
+                alert("Seu navegador não suporta recurso de voz.");
+                return;
+            }
+            
+            window.speechSynthesis.cancel(); // Para qualquer leitura anterior
+            
+            const title = document.getElementById('modalTitle').innerText;
+            const codeText = document.getElementById('modalCode').innerText;
+            const category = document.getElementById('modalCategory').innerText;
+            const description = document.getElementById('modalDescription').innerText;
+            
+            const textToSpeak = `Peça ${codeText}, ${title}. Categoria ${category}. ${description}`;
+            
+            const utterance = new SpeechSynthesisUtterance(textToSpeak);
+            utterance.lang = 'pt-BR';
+            utterance.rate = 0.95; // Velocidade ligeiramente mais calma para melhor compreensão
+            
+            window.speechSynthesis.speak(utterance);
+        }
 
         function initFirebase() {
             try {
@@ -1295,6 +1335,9 @@
         }
 
         function closeModal() {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
             document.getElementById('pieceModal').classList.remove('active');
         }
     </script>
