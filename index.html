@@ -1001,6 +1001,26 @@
                 </div>
             </div>
 
+            <!-- Painel 4: Backup Completo do Acervo (Fotos, Listagem e Descrições) -->
+            <div class="admin-card" style="background: #FDFBF7; border-color: var(--acropole-gold);">
+                <div class="admin-header">
+                    <h3><i class="fa-solid fa-database" style="color: var(--acropole-green);"></i> Backup Completo do Acervo (.JSON)</h3>
+                    <span style="font-size: 0.8rem; color: var(--text-muted);">Fotos + Listagem + Descrições + Eras</span>
+                </div>
+                <p style="font-size: 0.92rem; color: var(--text-muted); margin-bottom: 1rem;">
+                    Salve uma cópia completa com todas as peças, descrições, eras e fotos em um único arquivo, ou restaure um backup anterior na nuvem.
+                </p>
+                <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center;">
+                    <button type="button" class="btn-submit" onclick="exportFullBackupJSON()">
+                        <i class="fa-solid fa-file-export"></i> Baixar Backup Completo
+                    </button>
+                    <label class="btn-pdf" style="margin: 0;">
+                        <i class="fa-solid fa-file-import"></i> Restaurar Backup (.JSON)
+                        <input type="file" id="restoreBackupInput" accept=".json,application/json" onchange="restoreFullBackupJSON(event)" style="display: none;">
+                    </label>
+                </div>
+            </div>
+
         </div>
 
         <!-- Grid da Galeria de Peças -->
@@ -1290,6 +1310,98 @@
             });
 
             doc.save(`Acervo_Museu_da_Escola_${now.toISOString().slice(0,10)}.pdf`);
+        }
+
+        function exportFullBackupJSON() {
+            if (pieces.length === 0 && eras.length === 0) {
+                alert("Não há dados no acervo para exportar.");
+                return;
+            }
+
+            const backupPayload = {
+                system: "Museu da Escola - Acervo Virtual",
+                exportedAt: new Date().toISOString(),
+                totalPieces: pieces.length,
+                eras: eras,
+                pieces: pieces.map(({ id, ...rest }) => rest)
+            };
+
+            const jsonString = JSON.stringify(backupPayload, null, 2);
+            const blob = new Blob([jsonString], { type: "application/json;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+
+            const today = new Date().toISOString().slice(0, 10);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `Backup_Museu_da_Escola_${today}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        async function restoreFullBackupJSON(event) {
+            const file = event.target.files[0];
+            event.target.value = "";
+            if (!file) return;
+
+            if (!db || !window.FirebaseApp) {
+                alert("Banco de dados não conectado. Aguarde o carregamento e tente novamente.");
+                return;
+            }
+
+            try {
+                const text = await file.text();
+                const parsed = JSON.parse(text);
+                const backupPieces = Array.isArray(parsed.pieces) ? parsed.pieces : (Array.isArray(parsed) ? parsed : null);
+                const backupEras = Array.isArray(parsed.eras) ? parsed.eras : [];
+
+                if (!backupPieces) {
+                    alert("Arquivo de backup inválido.");
+                    return;
+                }
+
+                const confirmed = confirm(
+                    `Restaurar ${backupPieces.length} peça(s) e ${backupEras.length} era(s) deste arquivo para o banco na nuvem?`
+                );
+                if (!confirmed) return;
+
+                const { collection, addDoc, doc, setDoc } = window.FirebaseApp;
+
+                for (const eraName of backupEras) {
+                    if (typeof eraName === "string" && eraName.trim()) {
+                        await setDoc(doc(db, "eras", eraName.trim()), { name: eraName.trim() });
+                    }
+                }
+
+                const existingKeys = new Set(
+                    pieces.map(p => `${(p.code || "").trim()}||${(p.name || "").trim().toLowerCase()}`)
+                );
+
+                let addedCount = 0;
+                for (const item of backupPieces) {
+                    const code = String(item.code || "").trim();
+                    const name = String(item.name || "").trim();
+                    const key = `${code}||${name.toLowerCase()}`;
+
+                    if (!existingKeys.has(key)) {
+                        await addDoc(collection(db, "pieces"), {
+                            code,
+                            name,
+                            category: item.category || defaultEras[0],
+                            imageUrl: item.imageUrl || "",
+                            description: item.description || ""
+                        });
+                        existingKeys.add(key);
+                        addedCount++;
+                    }
+                }
+
+                alert(`Restauração concluída! ${addedCount} nova(s) peça(s) adicionada(s) ao acervo.`);
+            } catch (err) {
+                console.error("Erro ao restaurar backup:", err);
+                alert("Não foi possível ler ou restaurar o arquivo de backup.");
+            }
         }
 
         function updateEraDropdownAndFilters() {
